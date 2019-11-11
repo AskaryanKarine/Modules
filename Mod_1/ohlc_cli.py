@@ -30,7 +30,7 @@ def ohlc_for_intervals(data_frame, interval):
         interval_min = ohlc_for_minutes(interval_day, date3, date3+delta)
         while not interval_min.empty:
             interval_min = ohlc_for_minutes(interval_day, date3, date3+delta)
-            date5 = date5.strftime('%y-%d-%mT%XZ')
+            date5 = date5.strftime('%Y-%d-%mT%XZ')
             date3 += delta
             if not interval_min.empty:
                 dates = pandas.Series([date5]*(interval_min.size//4), index=interval_min.index)
@@ -61,6 +61,6 @@ if  WAY is not None:
     OHLC_5MIN = ohlc_for_intervals(DATA_FRAME_READ, 5)
     OHLC_30MIN = ohlc_for_intervals(DATA_FRAME_READ, 30)
     pandas.set_option('display.float_format', '{:g}'.format)
-    OHLC_5MIN.to_csv('ohlc_5min.csv', header=False)
-    OHLC_30MIN.to_csv('ohlc_30min.csv', header=False)
-    OHLC_240MIN.to_csv('ohlc_240min.csv', header=False)
+    OHLC_5MIN.to_csv('ohlc_5min.csv', header=False, float_format='%g')
+    OHLC_30MIN.to_csv('ohlc_30min.csv', header=False, float_format='%g')
+    OHLC_240MIN.to_csv('ohlc_240min.csv', header=False, float_format='%g')
