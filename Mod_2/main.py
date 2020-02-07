@@ -15,9 +15,10 @@ def getting_data(nasdaq_code: str):
     Returns a minute-by-minute DataFrame in the OHLC format"""
 
     if nasdaq_code == 'SBER':
-        url = 'http://export.finam.ru/SBER_20190601_20190607.csv?market=0&em=3&code=SBER&apply=0\
-            &df=1&mf=5&yf=2019&from=2019-06-01&dt=7&mt=5&yt=2019&to=2019-06-07&p=2&f=price&e=.csv\
-            &cn=SBER&dtf=4&tmf=3&MSOR=0&mstime=on&mstimever=1&sep=1&sep2=1&datf=1&at=1'
+        url = 'http://export.finam.ru/SBER_20190601_20190607.csv?market=0&em=3&code=SBER'+\
+              '&apply=0&df=1&mf=5&yf=2019&from=2019-06-01&dt=7&mt=5&yt=2019&to=2019-06-07'+\
+                  '&p=2&f=price&e=.csv&cn=SBER&dtf=4&tmf=3&MSOR=0&mstime=on&mstimever=1'+\
+                      '&sep=1&sep2=1&datf=1&at=1'
         txt = urlopen(url).readlines()
         with open('temp.csv', "w") as temp_file:
             for line in txt:
@@ -30,11 +31,13 @@ def getting_data(nasdaq_code: str):
         data_frame.insert(0, column='date', value=(data_frame['DATE']+' '+data_frame['TIME']))
         del data_frame['index'], data_frame['DATE'], data_frame['TIME'], data_frame['TICKER']
         del data_frame['PER'], data_frame['VOL']
-        data_frame['date'] = pandas.to_datetime(data_frame['date'])
+        data_frame['date'] = pandas.to_datetime(data_frame['date'],
+                                                format='%d/%m/%y %H:%M:%S', exact=False)
     else:
-        request = requests.get("https://api.tiingo.com/iex/{}/prices?startDate=2019-06-01\
-            &endDate=2019-06-07&resampleFreq=1min&token=f4b490cd38cf0a21bc5ee71dff43781641b3f7b0\
-            &format=csv".format(nasdaq_code))
+        request = requests.get("https://api.tiingo.com/iex/{}/".format(nasdaq_code)+\
+                               "prices?startDate=2019-06-01&endDate=2019-06-07&"+\
+                               "resampleFreq=1min&token=f4b490cd38"+\
+                               "cf0a21bc5ee71dff43781641b3f7b0&format=csv")
         with open('temp.csv', 'w') as temp_file:
             temp_file.write(request.text)
         data_frame = pandas.read_csv('temp.csv')
@@ -51,9 +54,8 @@ def my_ohlc(data_frame, interval):
     """Function for calculating OHLC for a given period of time.
     Returns a DataFrame in OHLC format
     where data_frame -- a minute-by-minute DataFrame in the OHLC format,
-          interval -- int, time interval in minutes, by default 5 minutes."""
-    if interval is None:
-        interval = 5
+          interval -- int, a given period of time"""
+
     end_day = data_frame.date[0]+pandas.Timedelta(days=1)
     start_day = data_frame.date[0]
     delta = pandas.Timedelta(minutes=interval)
@@ -71,15 +73,16 @@ def my_ohlc(data_frame, interval):
             index_open = df_min.date[df_min.date == start_i].index.tolist()
             if not index_close:
                 index_close = index_open
-            dates = {
-                'date': [start_i.strftime('%Y/%m/%d\n%H:%M:%S')],
-                'open': [df_min.open[index_open[0]]],
-                'high': [df_min['high'].max()],
-                'low': [df_min['low'].min()],
-                'close': [df_min.close[index_close[0]]]
-            }
-            result_for_interval = pandas.DataFrame(dates)
-            data_frame_result = data_frame_result.append(result_for_interval, ignore_index=True)
+            if index_open:
+                dates = {
+                    'date': [start_i.strftime('%Y/%m/%d\n%H:%M:%S')],
+                    'open': [df_min.open[index_open[0]]],
+                    'high': [df_min['high'].max()],
+                    'low': [df_min['low'].min()],
+                    'close': [df_min.close[index_close[0]]]
+                }
+                result_for_interval = pandas.DataFrame(dates)
+                data_frame_result = data_frame_result.append(result_for_interval, ignore_index=True)
             start_i += delta
             end_i += delta
         if df_days.empty:
@@ -92,7 +95,7 @@ def graph(data_frame, tick):
     """Function for calculating the construction of a candlestick chart.
     Returns an image with a graph.
     Where data_frame -- DataFrame with columns 'date', 'open', 'high', 'low', 'close',
-          tick -- str, the nasdaq company code."""
+          tick -- str, the nasdaq company code"""
     fig, axis = plt.subplots(figsize=(9, 7), dpi=110)
     tic = tick
     plt.title(tic, fontsize=18)

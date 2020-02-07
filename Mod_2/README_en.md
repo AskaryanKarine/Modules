@@ -5,6 +5,7 @@ The work on the project was as follows:
 Колесов И. (GitHub - github.com/enotik1poloskyn) - работа с аргументами командной строки     
 
 Libraries are required to work correctly with this program:     
+requests v.2.22.0,      
 pandas v.0.24.2,      
 matplotlib v.3.1.0,      
 mpl-finance v.0.10.0    
