@@ -1,2 +1,2 @@
 # Modules
-Modular projects from school
+Modular projects from Best Practice school
